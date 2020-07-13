@@ -1,0 +1,104 @@
+﻿USE QLGIAOVIEN
+GO
+--Q47
+SELECT *
+FROM GIAOVIEN
+WHERE GIAOVIEN.magv IN (SELECT THAMGIADT.magv FROM THAMGIADT)
+AND GIAOVIEN.MAGV IN (SELECT BOMON.truongbm FROM BOMON)
+GO
+
+--Q48
+SELECT *
+FROM GIAOVIEN GV1
+WHERE EXISTS
+(SELECT GV2.magv
+FROM GIAOVIEN GV2
+WHERE GV1.magv <>GV2.MAGV
+	AND GV1.HOTEN LIKE GV2.HOTEN
+	AND GV1.phai = GV2.PHAI
+	AND GV1.mabm = GV2.MABM
+)
+GO
+
+--Q49
+SELECT *
+FROM GIAOVIEN
+WHERE GIAOVIEN.LUONG > ALL (SELECT MIN(LUONG) FROM GIAOVIEN, BOMON WHERE GIAOVIEN.MABM = BOMON.mabm AND BOMON.tenbm = 'Công nghệ phần mềm')
+go
+
+--q50
+SELECT *
+FROM GIAOVIEN
+WHERE GIAOVIEN.LUONG > ALL (SELECT max(LUONG) FROM GIAOVIEN, BOMON WHERE GIAOVIEN.MABM = BOMON.mabm AND BOMON.tenbm = 'Hệ thống thông tin')
+go
+
+--q51
+select K.tenkhoa
+from KHOA K, GIAOVIEN GV, BOMON BM
+WHERE GV.mabm = BM.mabm AND BM.makhoa = K.makhoa
+GROUP BY K.makhoa, K.tenkhoa
+HAVING COUNT(*) >= ALL(
+select COUNT(*)
+from KHOA K, GIAOVIEN GV, BOMON BM
+WHERE GV.mabm = BM.mabm AND BM.makhoa = K.makhoa
+GROUP BY K.makhoa, K.tenkhoa
+)
+GO
+--Q52
+SELECT GV.HOTEN
+FROM GIAOVIEN GV, DETAI DT
+WHERE GV.magv = DT.gvcndt
+GROUP BY GV.magv, GV.hoten
+HAVING COUNT(*) >= ALL (
+SELECT COUNT(*)
+FROM GIAOVIEN GV, DETAI DT
+WHERE GV.magv = DT.gvcndt
+GROUP BY GV.magv, GV.hoten
+)
+GO
+
+--Q53
+SELECT GV.MABM
+FROM GIAOVIEN GV
+GROUP BY MABM
+HAVING COUNT(*) >= ALL (SELECT COUNT(*)
+FROM GIAOVIEN GV
+GROUP BY MABM
+
+)
+GO
+
+--Q54
+SELECT GV.HOTEN, BM.TENBM
+FROM GIAOVIEN GV, BOMON BM
+WHERE GV.MABM = BM.MABM AND MAGV IN
+(SELECT MAGV
+FROM THAMGIADT
+GROUP BY MAGV
+having count(*) >= all (select count(*)
+FROM THAMGIADT
+GROUP BY MAGV)
+)
+go
+
+--q55
+select hoten
+from GIAOVIEN gv, THAMGIADT tg
+where tg.magv = gv.magv and gv.mabm = 'HTTT'
+group by gv.magv, gv.hoten
+having count(distinct tg.madt) >= all (SELECT COUNT(DISTINCT THAMGIADT.MADT) FROM THAMGIADT WHERE GV.MAGV = THAMGIADT.MAGV GROUP BY THAMGIADT.MAGV)
+
+--q56
+select gv.hoten, bm.tenbm
+from GIAOVIEN gv, BOMON bm
+where gv.mabm = bm.mabm and gv.magv in 
+(
+select nt.magv
+from NGUOI_THAN nt
+group by magv
+having count(*) >= all (
+select count(*)
+from NGUOI_THAN nt
+group by magv
+))
+go
